@@ -10,6 +10,8 @@ import weka.core.converters.ConverterUtils.DataSource;
 
 import weka.core.Debug.Random;
 import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Standardize;
 
 /**
  *
@@ -20,7 +22,7 @@ public class Weka {
     public static void main(String[] args) throws Exception {
         String file;
         double number = .7;
-        file = "/home/devin/NetBeansProjects/weka/src/weka/irisData.csv"; //file location
+        file = "/home/devin/NetBeansProjects/weka/src/weka/carStuff.csv"; //file location
         DataSource source = new DataSource(file); // sets the source to the data file
         Instances data = source.getDataSet(); // gets the source and stores it into data
 
@@ -42,15 +44,26 @@ public class Weka {
         Instances trainSet = new Instances(data, 0, trainIndex);
         Instances testSet = new Instances(data, trainIndex, testIndex);
         
+        //standardizes the tainSet
+        Standardize standardizedData = new Standardize();
+        standardizedData.setInputFormat(trainSet);
         
-        HardCodedClassifier hc = new HardCodedClassifier();
-        hc.buildClassifier(data);
+        //makes a new instance of data to test on the classifier
+        Instances newTestSet = Filter.useFilter(testSet, standardizedData);
+        Instances newTrainSet = Filter.useFilter(trainSet, standardizedData);
+ 
+        //HardCodedClassifier hc = new HardCodedClassifier();
+        //hc.buildClassifier(data);
+        
+        KNearestNeighbor knn = new KNearestNeighbor();
+        knn.buildClassifier(newTrainSet);
         
         // evaluates the trainset
-        Evaluation eval = new Evaluation(trainSet);
+        Evaluation eval = new Evaluation(newTrainSet);
         
+                
         // formates the evaluation based on the setting in the evaluateModel function format
-        eval.evaluateModel(hc, testSet);
+        eval.evaluateModel(knn, newTestSet);
         System.out.println(eval.toSummaryString("\n RESULTS \n", true));
           
         
